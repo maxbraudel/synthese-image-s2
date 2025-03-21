@@ -1,0 +1,20 @@
+[main] Building folder: TD01 TD01_ex08
+[build] Starting build
+[proc] Executing command: /usr/local/bin/cmake --build /home/epigim-3/max.braudel/Documents/TD01/TD01/build --config Debug --target TD01_ex08 -j 14 --
+[build] [ 26%] Built target glad
+[build] [ 42%] Built target glbasimac
+[build] [ 92%] Built target glfw
+[build] [ 96%] Building CXX object TD01/CMakeFiles/TD01_ex08.dir/ex08.cpp.o
+[build] /home/epigim-3/max.braudel/Documents/TD01/TD01/TD01/ex08.cpp:78:73: warning: unused parameter 'mods' [-Wunused-parameter]
+[build] void clavier(GLFWwindow* window, int key, int scancode, int action, int mods)
+[build]                                                                         ^
+[build] /home/epigim-3/max.braudel/Documents/TD01/TD01/TD01/ex08.cpp:170:9: error: use of undeclared identifier 'thePoints'
+[build]         thePoints.addAPoint(newCoord, newColor);
+[build]         ^
+[build] /home/epigim-3/max.braudel/Documents/TD01/TD01/TD01/ex08.cpp:141:73: warning: unused parameter 'mods' [-Wunused-parameter]
+[build] static void sourisClics(GLFWwindow* window, int button, int action, int mods)
+[build]                                                                         ^
+[build] 2 warnings and 1 error generated.
+[build] gmake[3]: *** [TD01/CMakeFiles/TD01_ex08.dir/build.make:76 : TD01/CMakeFiles/TD01_ex08.dir/ex08.cpp.o] Erreur 1
+[build] gmake[2]: *** [CMakeFiles/Makefile2:492 : TD01/CMakeFiles/TD01_ex08.dir/all] Erreur 2
+[build] gmake[1]: *** [CMakeFiles/Makef
