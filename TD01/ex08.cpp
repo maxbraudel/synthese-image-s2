@@ -162,15 +162,8 @@ static void sourisClics(GLFWwindow* window, int button, int action, int mods)
             worldY = (1.0f - (float)ypos / windowHeight) * (GL_VIEW_SIZE / aspectRatio) - (GL_VIEW_SIZE / (2.0f * aspectRatio));
         }
         
-        // Create point coordinate and color arrays
-        float newCoord[2] = {worldX, worldY};
-        float newColor[3] = {1.0f, 1.0f, 1.0f}; // White point by default
-        
-        // Add the point to our set
-        thePoints.addAPoint(newCoord, newColor);
-        
         // Print the converted coordinates
-        std::cout << "Added point at world coordinates: (" << worldX << ", " << worldY << ")" << std::endl;
+        std::cout << "Clicked at world coordinates: (" << worldX << ", " << worldY << ")" << std::endl;
     }
 }
 
