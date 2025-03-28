@@ -116,15 +116,15 @@ void clavier(GLFWwindow* window, int key, int scancode, int action, int mods)
         switch (currentShape) {
             case SQUARE:
                 currentShape = TRIANGLE;
-                std::cout << "Showing triangle" << std::endl;
+                std::cout << "Montrer un carré" << std::endl;
                 break;
             case TRIANGLE:
                 currentShape = CIRCLE;
-                std::cout << "Showing circle" << std::endl;
+                std::cout << "Montrer un triangle" << std::endl;
                 break;
             case CIRCLE:
                 currentShape = SQUARE;
-                std::cout << "Showing square" << std::endl;
+                std::cout << "Montrer un cercle" << std::endl;
                 break;
         }
     }
