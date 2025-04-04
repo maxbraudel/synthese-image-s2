@@ -184,88 +184,22 @@ void initScene() {
     initShapes();
 }
 
-/**
- * Render the scene with all transformations
- */
+
 void renderScene() {
-    // Draw coordinate axes if enabled
-    if (showAxes) {
-        glLineWidth(2.0);
-        axesLines.drawSet();
-    }
-    
-    // Set color and draw cat head (circle at the center)
-    myEngine.setFlatColor(0.8f, 0.8f, 0.8f);  // Light gray for head
-    head.drawShape();
-    
-    // Draw right ear with transformations
-    myEngine.setFlatColor(0.7f, 0.7f, 0.7f);  // Slightly darker for ears
-    
-    // 1. Reset transformation matrix to identity
-    myEngine.mvMatrixStack.loadIdentity();
-    
-    // 2. Apply translation for right ear (45 degrees, top-right of circle)
-    float sqrt2_2 = 0.7071f; // sqrt(2)/2 - for 45 degrees
-    Vector3D rightEarPos{sqrt2_2 * 0.5f, sqrt2_2 * 0.5f, 0.0f};
-    myEngine.mvMatrixStack.addTranslation(rightEarPos);
-    
-    // 3. Apply rotation (60 degrees = PI/3)
-    Vector3D rotationAxis{0.0f, 0.0f, 1.0f}; // In 2D, rotate around Z axis
-    myEngine.mvMatrixStack.addRotation(M_PI/3, rotationAxis);
-    
-    // 4. Apply scaling (0.5 on both x and y)
-    Vector3D earScale{0.5f, 0.5f, 1.0f}; // In 2D, z-scale is always 1.0
-    myEngine.mvMatrixStack.addHomothety(earScale);
-    
-    // 5. Send transformations to pipeline
-    myEngine.updateMvMatrix();
-    
-    // 6. Draw the right ear
-    ear.drawShape();
-    
-    // Draw left ear with transformations
-    // 1. Reset transformation matrix to identity
-    myEngine.mvMatrixStack.loadIdentity();
-    
-    // 2. Apply translation for left ear (135 degrees, top-left of circle)
-    Vector3D leftEarPos{-sqrt2_2 * 0.5f, sqrt2_2 * 0.5f, 0.0f};
-    myEngine.mvMatrixStack.addTranslation(leftEarPos);
-    
-    // 3. Apply rotation (-60 degrees = -PI/3)
-    myEngine.mvMatrixStack.addRotation(-M_PI/3, rotationAxis);
-    
-    // 4. Apply scaling (0.5 on both x and y)
-    myEngine.mvMatrixStack.addHomothety(earScale);
-    
-    // 5. Send transformations to pipeline
-    myEngine.updateMvMatrix();
-    
-    // 6. Draw the left ear
-    ear.drawShape();
-    
-    // Draw eyes if enabled
-    if (showEyes) {
-        // Set color for eyes
-        myEngine.setFlatColor(0.0f, 0.0f, 0.0f);  // Black for eyes
-        
-        // Draw right eye
-        myEngine.mvMatrixStack.loadIdentity();
-        Vector3D rightEyePos{0.2f, 0.1f, 0.0f};
-        myEngine.mvMatrixStack.addTranslation(rightEyePos);
-        myEngine.updateMvMatrix();
-        eye.drawShape();
-        
-        // Draw left eye
-        myEngine.mvMatrixStack.loadIdentity();
-        Vector3D leftEyePos{-0.2f, 0.1f, 0.0f};
-        myEngine.mvMatrixStack.addTranslation(leftEyePos);
-        myEngine.updateMvMatrix();
-        eye.drawShape();
-    }
     
     // Reset transformation matrix to identity after all drawing
     myEngine.mvMatrixStack.loadIdentity();
     myEngine.updateMvMatrix();
+}
+
+void drawFirstArm() {
+    // Draw first arm
+    myEngine.setFlatColor(0.8f, 0.8f, 0.8f);
+    myEngine.mvMatrixStack.loadIdentity();
+    Vector3D firstArmPos{0.2f, -0.2f, 0.0f};
+    myEngine.mvMatrixStack.addTranslation(firstArmPos);
+    myEngine.updateMvMatrix();
+    head.drawShape();
 }
 
 int main() {
