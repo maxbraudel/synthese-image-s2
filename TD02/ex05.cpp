@@ -216,7 +216,7 @@ void renderScene() {
     // Send transformations to pipeline
     myEngine.updateMvMatrix();
     
-    // Draw the right ear
+    // Draw the right e ar
     ear.drawShape();
     
     // Draw left ear with transformations
