@@ -20,8 +20,8 @@ static const float GL_VIEW_SIZE = 6.0;
 
 /* Variables for background color */
 static float bgRed = 0.2f;
-static float bgGreen = 0.0f;
-static float bgBlue = 0.0f;
+static float bgGreen = 0.2f;
+static float bgBlue = 0.2f;
 
 /* OpenGL Engine */
 GLBI_Engine myEngine;
@@ -30,27 +30,23 @@ GLBI_Engine myEngine;
 GLBI_Set_Of_Points axesLines; // For drawing coordinate axes
 
 /* Shapes to draw */
-GLBI_Convex_2D_Shape head;       // Circle for cat's head
-GLBI_Convex_2D_Shape ear;        // Triangle for cat's ear
-GLBI_Convex_2D_Shape eye;        // Circle for cat's eye
+GLBI_Convex_2D_Shape carre;         // Carré de base
+GLBI_Convex_2D_Shape cercle;        // Cercle de base
+GLBI_Convex_2D_Shape trapeze;       // Trapèze pour le bras
 
 /* Global variables */
 bool showAxes = true;
-bool showEyes = true;
 
 /* Function prototypes */
 void initScene();
-void drawFirstArm();
-void drawRoundedSquare();
-void drawSecondArm();
-void drawThirdArm();
 void renderScene();
 void initAxes();
 void initShapes();
+void drawFirstArm();
 
 /* Error handling function */
 void onError(int error, const char* description) {
-	std::cerr << "GLFW Error: " << description << std::endl;
+    std::cerr << "GLFW Error: " << description << std::endl;
 }
 
 /* Window resize handler */
@@ -95,15 +91,12 @@ void clavier(GLFWwindow* window, int key, int scancode, int action, int mods)
         std::cout << (showAxes ? "Showing" : "Hiding") << " coordinate axes" << std::endl;
     }
     
-    // Toggle between filled and wireframe mode
+    // Activer le mode filaire ou plein
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        std::cout << "Wireframe mode" << std::endl;
     }
-    
     if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        std::cout << "Filled mode" << std::endl;
     }
 }
 
@@ -133,15 +126,14 @@ void initAxes() {
 }
 
 /**
- * Initialize shapes for cat face components
+ * Initialize shapes for mechanical arm components
  */
 void initShapes() {
-    // Initialize head (circle with diameter 1.0)
+    // Initialize circle (rayon = 1)
     std::vector<float> circleCoordinates;
     const int numSegments = 32;
-    const float radius = 0.5f; // Radius 0.5 for diameter 1.0
+    const float radius = 1.0f; 
     
-    // Generate points on the circle
     for (int i = 0; i < numSegments; i++) {
         float angle = 2.0f * M_PI * i / numSegments;
         float x = radius * cos(angle);
@@ -150,181 +142,30 @@ void initShapes() {
         circleCoordinates.push_back(y);
     }
     
-    head.initShape(circleCoordinates);
-    head.changeNature(GL_TRIANGLE_FAN);
+    cercle.initShape(circleCoordinates);
+    cercle.changeNature(GL_TRIANGLE_FAN);
     
-    // Initialize ear (triangle for cat ears)
-    std::vector<float> triangleCoordinates = {
-        -0.5f, -0.5f,  // Bottom-left corner
-        0.5f, -0.5f,   // Bottom-right corner
-        0.0f, 0.5f     // Top center
+    // Initialize square (côté = 1)
+    std::vector<float> squareCoordinates = {
+        -0.5f, -0.5f, 
+        0.5f, -0.5f, 
+        0.5f, 0.5f,
+        -0.5f, 0.5f
     };
     
-    ear.initShape(triangleCoordinates);
-    ear.changeNature(GL_TRIANGLE_FAN);
+    carre.initShape(squareCoordinates);
+    carre.changeNature(GL_TRIANGLE_FAN); 
     
-    // Initialize eye (small circle for cat eyes)
-    std::vector<float> eyeCoordinates;
-    const int eyeSegments = 16;
-    const float eyeRadius = 0.1f;
+    // Initialize trapezoid for arm
+    std::vector<float> trapezeCoordinates = {
+        -1.0f, -2.0f,  // Bas gauche
+        1.0f, -2.0f,   // Bas droite
+        0.5f, 2.0f,   // Haut droite
+        -0.5f, 2.0f   // Haut gauche
+    };
     
-    // Generate points for eye circle
-    for (int i = 0; i < eyeSegments; i++) {
-        float angle = 2.0f * M_PI * i / eyeSegments;
-        float x = eyeRadius * cos(angle);
-        float y = eyeRadius * sin(angle);
-        eyeCoordinates.push_back(x);
-        eyeCoordinates.push_back(y);
-    }
-    
-    eye.initShape(eyeCoordinates);
-    eye.changeNature(GL_TRIANGLE_FAN);
-}
-
-
-/**
- * Draw a square with rounded corners, side length 1, centered at origin
- * The rounded part extends 0.1 units into each corner
- */
-void drawRoundedSquare() {
-    // Create static objects that persist between function calls
-    static GLBI_Convex_2D_Shape cornerCircle;
-    static bool cornerCircleInitialized = false;
-    
-    // Initialize the corner circle if not already done
-    if (!cornerCircleInitialized) {
-        std::vector<float> circleCoordinates;
-        const int numSegments = 16;  // Fewer segments for the small corner
-        const float radius = 0.1f;   // Radius of the rounded corner
-        
-        // Generate points on the circle
-        for (int i = 0; i < numSegments; i++) {
-            float angle = 2.0f * M_PI * i / numSegments;
-            float x = radius * cos(angle);
-            float y = radius * sin(angle);
-            circleCoordinates.push_back(x);
-            circleCoordinates.push_back(y);
-        }
-        
-        cornerCircle.initShape(circleCoordinates);
-        cornerCircle.changeNature(GL_TRIANGLE_FAN);
-        cornerCircleInitialized = true;
-    }
-    
-    // Save current matrix state
-    myEngine.mvMatrixStack.pushMatrix();
-    
-    // Draw the main square (slightly smaller to account for rounded corners)
-    myEngine.setFlatColor(0.5f, 0.5f, 0.5f);  // Gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addHomothety(Vector3D(0.8f, 0.8f, 1.0f));  // Scale to 0.8 to leave room for corners
-    myEngine.updateMvMatrix();
-    ear.drawShape();  // Using the existing square
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Draw the four rounded corners
-    myEngine.setFlatColor(0.5f, 0.5f, 0.5f);  // Gray
-    
-    // Top-right corner
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.4f, 0.4f, 0.0f));
-    myEngine.updateMvMatrix();
-    cornerCircle.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Top-left corner
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(-0.4f, 0.4f, 0.0f));
-    myEngine.updateMvMatrix();
-    cornerCircle.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Bottom-right corner
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.4f, -0.4f, 0.0f));
-    myEngine.updateMvMatrix();
-    cornerCircle.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Bottom-left corner
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(-0.4f, -0.4f, 0.0f));
-    myEngine.updateMvMatrix();
-    cornerCircle.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Restore original matrix state
-    myEngine.mvMatrixStack.popMatrix();
-}
-
-/**
- * Draw the second arm (manipulator)
- * The repère (reference point) is at the center of the left rounded square
- */
-void drawSecondArm() {
-    // Save current matrix state
-    myEngine.mvMatrixStack.pushMatrix();
-    
-    // Draw the left rounded square
-    myEngine.setFlatColor(0.6f, 0.6f, 0.8f);  // Bluish gray
-    drawRoundedSquare();
-    
-    // Draw the connecting rectangle
-    myEngine.setFlatColor(0.5f, 0.5f, 0.7f);  // Darker bluish gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(1.0f, 0.0f, 0.0f));  // Move to the right
-    myEngine.mvMatrixStack.addHomothety(Vector3D(1.0f, 0.4f, 1.0f));    // Scale to make a rectangle
-    myEngine.updateMvMatrix();
-    ear.drawShape();  // Using the existing square as a base
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Draw the right rounded square
-    myEngine.setFlatColor(0.6f, 0.6f, 0.8f);  // Bluish gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Move to the right end
-    myEngine.updateMvMatrix();
-    drawRoundedSquare();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Restore original matrix state
-    myEngine.mvMatrixStack.popMatrix();
-}
-
-/**
- * Draw the third arm (beater)
- * The repère (reference point) is at the center of the left square
- */
-void drawThirdArm() {
-    // Save current matrix state
-    myEngine.mvMatrixStack.pushMatrix();
-    
-    // Draw the left square
-    myEngine.setFlatColor(0.8f, 0.6f, 0.6f);  // Reddish gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.updateMvMatrix();
-    ear.drawShape();  // Using the existing square
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Draw the connecting rectangle
-    myEngine.setFlatColor(0.7f, 0.5f, 0.5f);  // Darker reddish gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.75f, 0.0f, 0.0f));  // Move to the right
-    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.3f, 1.0f));     // Scale to make a rectangle
-    myEngine.updateMvMatrix();
-    ear.drawShape();  // Using the existing square as a base
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Draw the right circle (beater head)
-    myEngine.setFlatColor(0.8f, 0.6f, 0.6f);  // Reddish gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(1.5f, 0.0f, 0.0f));  // Move to the right end
-    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.5f, 1.0f));    // Scale to match diagram
-    myEngine.updateMvMatrix();
-    head.drawShape();  // Using the existing circle
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Restore original matrix state
-    myEngine.mvMatrixStack.popMatrix();
+    trapeze.initShape(trapezeCoordinates);
+    trapeze.changeNature(GL_TRIANGLE_FAN);
 }
 
 void initScene() {
@@ -333,171 +174,165 @@ void initScene() {
     
     // Initialize the shapes
     initShapes();
-    
-    // Add the filaire/plein toggle functionality to the keyboard handler
-    // This is already implemented in the clavier function
 }
 
 /**
- * Draw the main arm with two discs and a trapezoid
- * The repère (reference point) is at the center of the large disc
+ * Draws the first arm of the mechanical robot
+ * - Large circle at the base (radius 1.5)
+ * - Trapezoid body
+ * - Small circle at the top (radius 0.75)
  */
 void drawFirstArm() {
-    // Create trapezoid if not already created
-    static GLBI_Convex_2D_Shape trapezoid;
-    static bool trapezoidInitialized = false;
-    
-    if (!trapezoidInitialized) {
-        // Define trapezoid vertices
-        std::vector<float> trapezoidCoordinates = {
-            -0.5f, -1.0f,  // Bottom-left
-            0.5f, -1.0f,   // Bottom-right
-            0.25f, 1.0f,   // Top-right
-            -0.25f, 1.0f   // Top-left
-        };
-        
-        trapezoid.initShape(trapezoidCoordinates);
-        trapezoid.changeNature(GL_TRIANGLE_FAN);
-        trapezoidInitialized = true;
-    }
-    
-    // Save the current matrix state
-    myEngine.mvMatrixStack.pushMatrix();
-    
-    // Draw the large disc at the base (radius 1)
-    myEngine.setFlatColor(0.7f, 0.7f, 0.7f);  // Light gray
-    head.drawShape();  // Using the existing circle with radius 0.5
-    
-    // Draw the trapezoid body
-    myEngine.setFlatColor(0.6f, 0.6f, 0.6f);  // Medium gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addHomothety(Vector3D(1.0f, 2.0f, 1.0f));  // Scale to match the diagram
-    myEngine.updateMvMatrix();
-    trapezoid.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Draw the small disc at the top
-    myEngine.setFlatColor(0.7f, 0.7f, 0.7f);  // Light gray
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Move to top of trapezoid
-    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.5f, 1.0f));  // Half the size of the base disc
-    myEngine.updateMvMatrix();
-    head.drawShape();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    // Restore the original matrix state
-    myEngine.mvMatrixStack.popMatrix();
-}
-
-void renderScene() {
     // Reset transformation matrix to identity
     myEngine.mvMatrixStack.loadIdentity();
     
-    // Draw coordinate axes if enabled
+    // Position everything relative to the large circle
+    
+    // Draw the large circle (base)
+    myEngine.setFlatColor(0.6f, 0.6f, 0.6f); // Gris
+    
+    // Use the matrix stack to scale the base circle to radius 1.5
+    myEngine.mvMatrixStack.pushMatrix();
+    Vector3D circleScale{1.5f, 1.5f, 1.0f};
+    myEngine.mvMatrixStack.addHomothety(circleScale);
+    myEngine.updateMvMatrix();
+    cercle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the trapezoid body
+    myEngine.setFlatColor(0.5f, 0.5f, 0.5f); // Gris plus foncé
+    
+    // Trapezoid is positioned above the center of the large circle
+    myEngine.mvMatrixStack.pushMatrix();
+    Vector3D trapezePos{0.0f, 1.5f, 0.0f}; // 1.5 units up from the large circle center
+    myEngine.mvMatrixStack.addTranslation(trapezePos);
+    myEngine.updateMvMatrix();
+    trapeze.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the small circle (top)
+    myEngine.setFlatColor(0.6f, 0.6f, 0.6f); // Même couleur que le cercle de base
+    
+    // Place the small circle at the top of the trapezoid
+    myEngine.mvMatrixStack.pushMatrix();
+    Vector3D smallCirclePos{0.0f, 3.5f, 0.0f}; // 3.5 units up from large circle center
+    myEngine.mvMatrixStack.addTranslation(smallCirclePos);
+    
+    // Scale the circle to be smaller (radius 0.75)
+    Vector3D smallCircleScale{0.75f, 0.75f, 1.0f};
+    myEngine.mvMatrixStack.addHomothety(smallCircleScale);
+    
+    myEngine.updateMvMatrix();
+    cercle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Reset matrix after drawing
+    myEngine.mvMatrixStack.loadIdentity();
+    myEngine.updateMvMatrix();
+}
+
+void renderScene() {
     if (showAxes) {
+        glLineWidth(2.0);
         axesLines.drawSet();
     }
     
-    // Draw the complete mechanical arm
-    // First arm (main arm)
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, -1.0f, 0.0f));  // Position at bottom of screen
-    myEngine.updateMvMatrix();
+    // Draw the first arm
     drawFirstArm();
-    
-    // Second arm (manipulator) - attached to the top of the first arm
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Position at top of first arm
-    myEngine.mvMatrixStack.addRotation(30.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 30 degrees
-    myEngine.updateMvMatrix();
-    drawSecondArm();
-    
-    // Third arm (beater) - attached to the right end of the second arm
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Position at end of second arm
-    myEngine.mvMatrixStack.addRotation(45.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 45 degrees
-    myEngine.updateMvMatrix();
-    drawThirdArm();
-    myEngine.mvMatrixStack.popMatrix();  // Pop third arm
-    
-    myEngine.mvMatrixStack.popMatrix();  // Pop second arm
-    myEngine.mvMatrixStack.popMatrix();  // Pop first arm
     
     // Reset transformation matrix to identity after all drawing
     myEngine.mvMatrixStack.loadIdentity();
     myEngine.updateMvMatrix();
 }
 
-int main() {
-    // Initialize the library
+int main()
+{
+    // Initialize GLFW
     if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
-
-    /* Callback to a function if an error is rised by GLFW */
-	glfwSetErrorCallback(onError);
-
-    // Create a windowed mode window and its OpenGL context
-    const int WINDOW_WIDTH = 800;
-    const int WINDOW_HEIGHT = 800;
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "TD 01 Ex 09", nullptr, nullptr);
+    
+    // Configure error callback
+    glfwSetErrorCallback(onError);
+    
+    // Configure OpenGL version (3.3 core profile)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+    // Create a window
+    int windowWidth = 500;
+    int windowHeight = 500;
+    aspectRatio = (float)windowWidth / (float)windowHeight;
+    
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "TD03 Ex01 - Bras mécanique", nullptr, nullptr);
     if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
-
+    
     // Make the window's context current
     glfwMakeContextCurrent(window);
     
-    // Set the window resize callback
+    // Initialize GLAD
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+    
+    // Set up viewport
+    glViewport(0, 0, windowWidth, windowHeight);
+    
+    // Set up callbacks
+    glfwSetKeyCallback(window, clavier);
     glfwSetWindowSizeCallback(window, onWindowResized);
     
-    // Set the keyboard input callback
-    glfwSetKeyCallback(window, clavier);
-
-	// Intialize glad (loads the OpenGL functions)
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		return -1;
-	}
-
-	// Initialize Rendering Engine
-	myEngine.initGL();
-	
-	// Initial window resize to set up projection
-	onWindowResized(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-	
-	// Initialize the scene
-	initScene();
-
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window))
-	{
-		/* Get time (in second) at loop beginning */
-		double startTime = glfwGetTime();
-
-		/* Render here */
-		glClearColor(bgRed, bgGreen, bgBlue, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
+    // Initialize the engine
+    myEngine.init(windowWidth, windowHeight);
+    
+    // Set the projection matrix for the virtual world
+    if (aspectRatio > 1.0) {
+        myEngine.set2DProjection(-GL_VIEW_SIZE * aspectRatio / 2.0f, GL_VIEW_SIZE * aspectRatio / 2.0f, -GL_VIEW_SIZE / 2.0f, GL_VIEW_SIZE / 2.0f);
+    } else {
+        myEngine.set2DProjection(-GL_VIEW_SIZE / 2.0f, GL_VIEW_SIZE / 2.0f, -GL_VIEW_SIZE / (2.0f * aspectRatio), GL_VIEW_SIZE / (2.0f * aspectRatio));
+    }
+    
+    // Initialize the scene
+    initScene();
+    
+    double startTime = 0.0;
+    double endTime = 0.0;
+    
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        // Time management
+        startTime = glfwGetTime();
+        
+        // Clear the screen
+        glClearColor(bgRed, bgGreen, bgBlue, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
         // Render the scene
-		renderScene();
-
-		/* Swap front and back buffers */
-		glfwSwapBuffers(window);
-
-		/* Poll for and process events */
-		glfwPollEvents();
-
-		/* Elapsed time computation from loop begining */
-		double elapsedTime = glfwGetTime() - startTime;
-		/* If to few time is spend vs our wanted FPS, we wait */
-		while(elapsedTime < FRAMERATE_IN_SECONDS)
-		{
-			glfwWaitEventsTimeout(FRAMERATE_IN_SECONDS-elapsedTime);
-			elapsedTime = glfwGetTime() - startTime;
-		}
-	}
-
+        renderScene();
+        
+        // Swap buffers and poll events
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+        
+        // Framerate control
+        endTime = glfwGetTime();
+        double elapsed = endTime - startTime;
+        if (elapsed < FRAMERATE_IN_SECONDS) {
+            glfwWaitEventsTimeout(FRAMERATE_IN_SECONDS - elapsed);
+        }
+    }
+    
+    // Clean up
+    glfwDestroyWindow(window);
     glfwTerminate();
+    
     return 0;
 }
