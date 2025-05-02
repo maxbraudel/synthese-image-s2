@@ -40,6 +40,10 @@ bool showEyes = true;
 
 /* Function prototypes */
 void initScene();
+void drawFirstArm();
+void drawRoundedSquare();
+void drawSecondArm();
+void drawThirdArm();
 void renderScene();
 void initAxes();
 void initShapes();
@@ -334,46 +338,6 @@ void initScene() {
     // This is already implemented in the clavier function
 }
 
-
-void renderScene() {
-    // Reset transformation matrix to identity
-    myEngine.mvMatrixStack.loadIdentity();
-    
-    // Draw coordinate axes if enabled
-    if (showAxes) {
-        axesLines.drawSet();
-    }
-    
-    // Draw the complete mechanical arm
-    // First arm (main arm)
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, -1.0f, 0.0f));  // Position at bottom of screen
-    myEngine.updateMvMatrix();
-    drawFirstArm();
-    
-    // Second arm (manipulator) - attached to the top of the first arm
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Position at top of first arm
-    myEngine.mvMatrixStack.addRotation(30.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 30 degrees
-    myEngine.updateMvMatrix();
-    drawSecondArm();
-    
-    // Third arm (beater) - attached to the right end of the second arm
-    myEngine.mvMatrixStack.pushMatrix();
-    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Position at end of second arm
-    myEngine.mvMatrixStack.addRotation(45.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 45 degrees
-    myEngine.updateMvMatrix();
-    drawThirdArm();
-    myEngine.mvMatrixStack.popMatrix();  // Pop third arm
-    
-    myEngine.mvMatrixStack.popMatrix();  // Pop second arm
-    myEngine.mvMatrixStack.popMatrix();  // Pop first arm
-    
-    // Reset transformation matrix to identity after all drawing
-    myEngine.mvMatrixStack.loadIdentity();
-    myEngine.updateMvMatrix();
-}
-
 /**
  * Draw the main arm with two discs and a trapezoid
  * The repère (reference point) is at the center of the large disc
@@ -423,6 +387,45 @@ void drawFirstArm() {
     
     // Restore the original matrix state
     myEngine.mvMatrixStack.popMatrix();
+}
+
+void renderScene() {
+    // Reset transformation matrix to identity
+    myEngine.mvMatrixStack.loadIdentity();
+    
+    // Draw coordinate axes if enabled
+    if (showAxes) {
+        axesLines.drawSet();
+    }
+    
+    // Draw the complete mechanical arm
+    // First arm (main arm)
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, -1.0f, 0.0f));  // Position at bottom of screen
+    myEngine.updateMvMatrix();
+    drawFirstArm();
+    
+    // Second arm (manipulator) - attached to the top of the first arm
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Position at top of first arm
+    myEngine.mvMatrixStack.addRotation(30.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 30 degrees
+    myEngine.updateMvMatrix();
+    drawSecondArm();
+    
+    // Third arm (beater) - attached to the right end of the second arm
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Position at end of second arm
+    myEngine.mvMatrixStack.addRotation(45.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 45 degrees
+    myEngine.updateMvMatrix();
+    drawThirdArm();
+    myEngine.mvMatrixStack.popMatrix();  // Pop third arm
+    
+    myEngine.mvMatrixStack.popMatrix();  // Pop second arm
+    myEngine.mvMatrixStack.popMatrix();  // Pop first arm
+    
+    // Reset transformation matrix to identity after all drawing
+    myEngine.mvMatrixStack.loadIdentity();
+    myEngine.updateMvMatrix();
 }
 
 int main() {
