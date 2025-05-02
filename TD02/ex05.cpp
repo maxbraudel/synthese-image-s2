@@ -128,12 +128,11 @@ void initAxes() {
  * Initialize shapes for cat face components
  */
 void initShapes() {
-    // Initialize head (circle with diameter 1.0)
+    // Initialize head
     std::vector<float> circleCoordinates;
     const int numSegments = 32;
-    const float radius = 0.5f; // Radius 0.5 for diameter 1.0
+    const float radius = 0.5f; 
     
-    // Generate points on the circle
     for (int i = 0; i < numSegments; i++) {
         float angle = 2.0f * M_PI * i / numSegments;
         float x = radius * cos(angle);
@@ -145,22 +144,22 @@ void initShapes() {
     head.initShape(circleCoordinates);
     head.changeNature(GL_TRIANGLE_FAN);
     
-    // Initialize ear (triangle for cat ears)
+    // Initialize ear 
     std::vector<float> triangleCoordinates = {
-        -0.5f, -0.5f,  // Bottom-left corner
-        0.5f, -0.5f,   // Bottom-right corner
-        0.0f, 0.5f     // Top center
+        -0.5f, -0.5f, 
+        0.5f, -0.5f, 
+        0.0f, 0.5f  
     };
     
     ear.initShape(triangleCoordinates);
-    ear.changeNature(GL_TRIANGLE_FAN);
+    ear.changeNature(GL_TRIANGLE_FAN); 
     
-    // Initialize eye (small circle for cat eyes)
+    // Initialize eye
     std::vector<float> eyeCoordinates;
     const int eyeSegments = 16;
     const float eyeRadius = 0.1f;
     
-    // Generate points for eye circle
+    // eye circle
     for (int i = 0; i < eyeSegments; i++) {
         float angle = 2.0f * M_PI * i / eyeSegments;
         float x = eyeRadius * cos(angle);
@@ -173,9 +172,7 @@ void initShapes() {
     eye.changeNature(GL_TRIANGLE_FAN);
 }
 
-/**
- * Initialize the scene with shapes
- */
+
 void initScene() {
     // Initialize the coordinate axes
     initAxes();
@@ -205,7 +202,7 @@ void renderScene() {
     Vector3D rightEarPos{sqrt2_2 * 0.5f, sqrt2_2 * 0.5f, 0.0f};
     myEngine.mvMatrixStack.addTranslation(rightEarPos);
     
-    // Apply rotation (60 degrees = PI/3)
+    // Apply rotation 
     Vector3D rotationAxis{0.0f, 0.0f, 1.0f};
     myEngine.mvMatrixStack.addRotation(M_PI/3, rotationAxis);
     
@@ -216,14 +213,12 @@ void renderScene() {
     // Send transformations to pipeline
     myEngine.updateMvMatrix();
     
-    // Draw the right e ar
     ear.drawShape();
     
-    // Draw left ear with transformations
     // Reset transformation matrix to identity
     myEngine.mvMatrixStack.loadIdentity();
     
-    // Apply translation for left ear (135 degrees, top-left of circle)
+    // Apply translation for left ear
     Vector3D leftEarPos{-sqrt2_2 * 0.5f, sqrt2_2 * 0.5f, 0.0f};
     myEngine.mvMatrixStack.addTranslation(leftEarPos);
     

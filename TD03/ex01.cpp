@@ -91,11 +91,15 @@ void clavier(GLFWwindow* window, int key, int scancode, int action, int mods)
         std::cout << (showAxes ? "Showing" : "Hiding") << " coordinate axes" << std::endl;
     }
     
-    // Toggle eyes display
-    if (key == GLFW_KEY_E && action == GLFW_PRESS)
-    {
-        showEyes = !showEyes;
-        std::cout << (showEyes ? "Showing" : "Hiding") << " cat eyes" << std::endl;
+    // Toggle between filled and wireframe mode
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        std::cout << "Wireframe mode" << std::endl;
+    }
+    
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        std::cout << "Filled mode" << std::endl;
     }
 }
 
@@ -173,33 +177,252 @@ void initShapes() {
     eye.changeNature(GL_TRIANGLE_FAN);
 }
 
+
 /**
- * Initialize the scene with shapes
+ * Draw a square with rounded corners, side length 1, centered at origin
+ * The rounded part extends 0.1 units into each corner
  */
+void drawRoundedSquare() {
+    // Create static objects that persist between function calls
+    static GLBI_Convex_2D_Shape cornerCircle;
+    static bool cornerCircleInitialized = false;
+    
+    // Initialize the corner circle if not already done
+    if (!cornerCircleInitialized) {
+        std::vector<float> circleCoordinates;
+        const int numSegments = 16;  // Fewer segments for the small corner
+        const float radius = 0.1f;   // Radius of the rounded corner
+        
+        // Generate points on the circle
+        for (int i = 0; i < numSegments; i++) {
+            float angle = 2.0f * M_PI * i / numSegments;
+            float x = radius * cos(angle);
+            float y = radius * sin(angle);
+            circleCoordinates.push_back(x);
+            circleCoordinates.push_back(y);
+        }
+        
+        cornerCircle.initShape(circleCoordinates);
+        cornerCircle.changeNature(GL_TRIANGLE_FAN);
+        cornerCircleInitialized = true;
+    }
+    
+    // Save current matrix state
+    myEngine.mvMatrixStack.pushMatrix();
+    
+    // Draw the main square (slightly smaller to account for rounded corners)
+    myEngine.setFlatColor(0.5f, 0.5f, 0.5f);  // Gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addHomothety(Vector3D(0.8f, 0.8f, 1.0f));  // Scale to 0.8 to leave room for corners
+    myEngine.updateMvMatrix();
+    ear.drawShape();  // Using the existing square
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the four rounded corners
+    myEngine.setFlatColor(0.5f, 0.5f, 0.5f);  // Gray
+    
+    // Top-right corner
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.4f, 0.4f, 0.0f));
+    myEngine.updateMvMatrix();
+    cornerCircle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Top-left corner
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(-0.4f, 0.4f, 0.0f));
+    myEngine.updateMvMatrix();
+    cornerCircle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Bottom-right corner
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.4f, -0.4f, 0.0f));
+    myEngine.updateMvMatrix();
+    cornerCircle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Bottom-left corner
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(-0.4f, -0.4f, 0.0f));
+    myEngine.updateMvMatrix();
+    cornerCircle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Restore original matrix state
+    myEngine.mvMatrixStack.popMatrix();
+}
+
+/**
+ * Draw the second arm (manipulator)
+ * The repère (reference point) is at the center of the left rounded square
+ */
+void drawSecondArm() {
+    // Save current matrix state
+    myEngine.mvMatrixStack.pushMatrix();
+    
+    // Draw the left rounded square
+    myEngine.setFlatColor(0.6f, 0.6f, 0.8f);  // Bluish gray
+    drawRoundedSquare();
+    
+    // Draw the connecting rectangle
+    myEngine.setFlatColor(0.5f, 0.5f, 0.7f);  // Darker bluish gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(1.0f, 0.0f, 0.0f));  // Move to the right
+    myEngine.mvMatrixStack.addHomothety(Vector3D(1.0f, 0.4f, 1.0f));    // Scale to make a rectangle
+    myEngine.updateMvMatrix();
+    ear.drawShape();  // Using the existing square as a base
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the right rounded square
+    myEngine.setFlatColor(0.6f, 0.6f, 0.8f);  // Bluish gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Move to the right end
+    myEngine.updateMvMatrix();
+    drawRoundedSquare();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Restore original matrix state
+    myEngine.mvMatrixStack.popMatrix();
+}
+
+/**
+ * Draw the third arm (beater)
+ * The repère (reference point) is at the center of the left square
+ */
+void drawThirdArm() {
+    // Save current matrix state
+    myEngine.mvMatrixStack.pushMatrix();
+    
+    // Draw the left square
+    myEngine.setFlatColor(0.8f, 0.6f, 0.6f);  // Reddish gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.updateMvMatrix();
+    ear.drawShape();  // Using the existing square
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the connecting rectangle
+    myEngine.setFlatColor(0.7f, 0.5f, 0.5f);  // Darker reddish gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.75f, 0.0f, 0.0f));  // Move to the right
+    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.3f, 1.0f));     // Scale to make a rectangle
+    myEngine.updateMvMatrix();
+    ear.drawShape();  // Using the existing square as a base
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the right circle (beater head)
+    myEngine.setFlatColor(0.8f, 0.6f, 0.6f);  // Reddish gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(1.5f, 0.0f, 0.0f));  // Move to the right end
+    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.5f, 1.0f));    // Scale to match diagram
+    myEngine.updateMvMatrix();
+    head.drawShape();  // Using the existing circle
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Restore original matrix state
+    myEngine.mvMatrixStack.popMatrix();
+}
+
 void initScene() {
     // Initialize the coordinate axes
     initAxes();
     
     // Initialize the shapes
     initShapes();
+    
+    // Add the filaire/plein toggle functionality to the keyboard handler
+    // This is already implemented in the clavier function
 }
 
 
 void renderScene() {
+    // Reset transformation matrix to identity
+    myEngine.mvMatrixStack.loadIdentity();
+    
+    // Draw coordinate axes if enabled
+    if (showAxes) {
+        axesLines.drawSet();
+    }
+    
+    // Draw the complete mechanical arm
+    // First arm (main arm)
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, -1.0f, 0.0f));  // Position at bottom of screen
+    myEngine.updateMvMatrix();
+    drawFirstArm();
+    
+    // Second arm (manipulator) - attached to the top of the first arm
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Position at top of first arm
+    myEngine.mvMatrixStack.addRotation(30.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 30 degrees
+    myEngine.updateMvMatrix();
+    drawSecondArm();
+    
+    // Third arm (beater) - attached to the right end of the second arm
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(2.0f, 0.0f, 0.0f));  // Position at end of second arm
+    myEngine.mvMatrixStack.addRotation(45.0f, Vector3D(0.0f, 0.0f, 1.0f));  // Rotate 45 degrees
+    myEngine.updateMvMatrix();
+    drawThirdArm();
+    myEngine.mvMatrixStack.popMatrix();  // Pop third arm
+    
+    myEngine.mvMatrixStack.popMatrix();  // Pop second arm
+    myEngine.mvMatrixStack.popMatrix();  // Pop first arm
     
     // Reset transformation matrix to identity after all drawing
     myEngine.mvMatrixStack.loadIdentity();
     myEngine.updateMvMatrix();
 }
 
+/**
+ * Draw the main arm with two discs and a trapezoid
+ * The repère (reference point) is at the center of the large disc
+ */
 void drawFirstArm() {
-    // Draw first arm
-    myEngine.setFlatColor(0.8f, 0.8f, 0.8f);
-    myEngine.mvMatrixStack.loadIdentity();
-    Vector3D firstArmPos{0.2f, -0.2f, 0.0f};
-    myEngine.mvMatrixStack.addTranslation(firstArmPos);
+    // Create trapezoid if not already created
+    static GLBI_Convex_2D_Shape trapezoid;
+    static bool trapezoidInitialized = false;
+    
+    if (!trapezoidInitialized) {
+        // Define trapezoid vertices
+        std::vector<float> trapezoidCoordinates = {
+            -0.5f, -1.0f,  // Bottom-left
+            0.5f, -1.0f,   // Bottom-right
+            0.25f, 1.0f,   // Top-right
+            -0.25f, 1.0f   // Top-left
+        };
+        
+        trapezoid.initShape(trapezoidCoordinates);
+        trapezoid.changeNature(GL_TRIANGLE_FAN);
+        trapezoidInitialized = true;
+    }
+    
+    // Save the current matrix state
+    myEngine.mvMatrixStack.pushMatrix();
+    
+    // Draw the large disc at the base (radius 1)
+    myEngine.setFlatColor(0.7f, 0.7f, 0.7f);  // Light gray
+    head.drawShape();  // Using the existing circle with radius 0.5
+    
+    // Draw the trapezoid body
+    myEngine.setFlatColor(0.6f, 0.6f, 0.6f);  // Medium gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addHomothety(Vector3D(1.0f, 2.0f, 1.0f));  // Scale to match the diagram
+    myEngine.updateMvMatrix();
+    trapezoid.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Draw the small disc at the top
+    myEngine.setFlatColor(0.7f, 0.7f, 0.7f);  // Light gray
+    myEngine.mvMatrixStack.pushMatrix();
+    myEngine.mvMatrixStack.addTranslation(Vector3D(0.0f, 2.0f, 0.0f));  // Move to top of trapezoid
+    myEngine.mvMatrixStack.addHomothety(Vector3D(0.5f, 0.5f, 1.0f));  // Half the size of the base disc
     myEngine.updateMvMatrix();
     head.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Restore the original matrix state
+    myEngine.mvMatrixStack.popMatrix();
 }
 
 int main() {
