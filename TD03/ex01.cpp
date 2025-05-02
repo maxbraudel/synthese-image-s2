@@ -178,22 +178,27 @@ void initScene() {
 
 /**
  * Draws the first arm of the mechanical robot
- * - Large circle at the base (radius 1.5)
+ * - Large circle at the base (radius 0.8)
  * - Trapezoid body
- * - Small circle at the top (radius 0.75)
+ * - Small circle at the top (radius 0.4)
  */
 void drawFirstArm() {
     // Reset transformation matrix to identity
     myEngine.mvMatrixStack.loadIdentity();
     
-    // Position everything relative to the large circle
+    // Apply a global scale to the entire arm to fit viewport
+    myEngine.mvMatrixStack.pushMatrix();
+    
+    // Translate the arm slightly downward to keep it centered
+    Vector3D armPosOffset{0.0f, -0.5f, 0.0f};
+    myEngine.mvMatrixStack.addTranslation(armPosOffset);
     
     // Draw the large circle (base)
     myEngine.setFlatColor(0.6f, 0.6f, 0.6f); // Gris
     
-    // Use the matrix stack to scale the base circle to radius 1.5
+    // Use the matrix stack to scale the base circle to radius 0.8
     myEngine.mvMatrixStack.pushMatrix();
-    Vector3D circleScale{1.5f, 1.5f, 1.0f};
+    Vector3D circleScale{0.8f, 0.8f, 1.0f};
     myEngine.mvMatrixStack.addHomothety(circleScale);
     myEngine.updateMvMatrix();
     cercle.drawShape();
@@ -204,8 +209,13 @@ void drawFirstArm() {
     
     // Trapezoid is positioned above the center of the large circle
     myEngine.mvMatrixStack.pushMatrix();
-    Vector3D trapezePos{0.0f, 1.5f, 0.0f}; // 1.5 units up from the large circle center
+    Vector3D trapezePos{0.0f, 0.8f, 0.0f}; // 0.8 units up from the large circle center
     myEngine.mvMatrixStack.addTranslation(trapezePos);
+    
+    // Scale the trapezoid to be smaller in height
+    Vector3D trapezeScale{0.6f, 0.6f, 1.0f};
+    myEngine.mvMatrixStack.addHomothety(trapezeScale);
+    
     myEngine.updateMvMatrix();
     trapeze.drawShape();
     myEngine.mvMatrixStack.popMatrix();
@@ -215,15 +225,18 @@ void drawFirstArm() {
     
     // Place the small circle at the top of the trapezoid
     myEngine.mvMatrixStack.pushMatrix();
-    Vector3D smallCirclePos{0.0f, 3.5f, 0.0f}; // 3.5 units up from large circle center
+    Vector3D smallCirclePos{0.0f, 1.8f, 0.0f}; // 1.8 units up from large circle center
     myEngine.mvMatrixStack.addTranslation(smallCirclePos);
     
-    // Scale the circle to be smaller (radius 0.75)
-    Vector3D smallCircleScale{0.75f, 0.75f, 1.0f};
+    // Scale the circle to be smaller (radius 0.4)
+    Vector3D smallCircleScale{0.4f, 0.4f, 1.0f};
     myEngine.mvMatrixStack.addHomothety(smallCircleScale);
     
     myEngine.updateMvMatrix();
     cercle.drawShape();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    // Pop the main matrix for the arm
     myEngine.mvMatrixStack.popMatrix();
     
     // Reset matrix after drawing
