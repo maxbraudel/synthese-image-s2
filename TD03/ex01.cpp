@@ -290,8 +290,8 @@ int main()
     glfwSetKeyCallback(window, clavier);
     glfwSetWindowSizeCallback(window, onWindowResized);
     
-    // Initialize the engine
-    myEngine.init(windowWidth, windowHeight);
+    // The engine is automatically initialized
+    // No need to call init as it doesn't exist in this version of GLBI_Engine
     
     // Set the projection matrix for the virtual world
     if (aspectRatio > 1.0) {
